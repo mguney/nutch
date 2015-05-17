@@ -30,6 +30,7 @@
      <ant dir="feed" target="deploy"/>
      <ant dir="headings" target="deploy"/>
      <ant dir="index-basic" target="deploy"/>
+	 <ant dir="index-html" target="deploy"/>
      <ant dir="index-anchor" target="deploy"/>
      <ant dir="index-geoip" target="deploy"/>
      <ant dir="index-more" target="deploy"/>
@@ -88,6 +89,7 @@
     <parallel threadCount="2">
      <ant dir="creativecommons" target="test"/>
      <ant dir="index-basic" target="test"/>
+	 <ant dir="index-html" target="test"/>
      <ant dir="index-anchor" target="test"/>
      <ant dir="index-geoip" target="test"/>
      <ant dir="index-more" target="test"/>
@@ -131,6 +133,7 @@
     <ant dir="feed" target="clean"/>
     <ant dir="headings" target="clean"/>
     <ant dir="index-basic" target="clean"/>
+	<ant dir="index-html" target="clean"/>
     <ant dir="index-anchor" target="clean"/>
     <ant dir="index-geoip" target="clean"/>
     <ant dir="index-more" target="clean"/>

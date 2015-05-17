@@ -25,6 +25,8 @@ import org.apache.hadoop.io.Text;
  * @author J&eacute;r&ocirc;me Charron
  */
 public interface Nutch {
+  
+  public static final String ORIGINAL_FULL_CONTENT = "OriginalFullContent";
 
 	public static final String ORIGINAL_CHAR_ENCODING = "OriginalCharEncoding";
 

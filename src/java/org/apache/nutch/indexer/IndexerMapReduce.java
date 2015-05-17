@@ -38,6 +38,7 @@ import org.apache.nutch.crawl.CrawlDb;
 import org.apache.nutch.crawl.Inlinks;
 import org.apache.nutch.crawl.LinkDb;
 import org.apache.nutch.crawl.NutchWritable;
+import org.apache.nutch.fetcher.Fetcher;
 import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.metadata.Nutch;
 import org.apache.nutch.net.URLFilters;
@@ -46,6 +47,7 @@ import org.apache.nutch.parse.Parse;
 import org.apache.nutch.parse.ParseData;
 import org.apache.nutch.parse.ParseImpl;
 import org.apache.nutch.parse.ParseText;
+import org.apache.nutch.protocol.Content;
 import org.apache.nutch.scoring.ScoringFilterException;
 import org.apache.nutch.scoring.ScoringFilters;
 
@@ -177,6 +179,7 @@ public class IndexerMapReduce extends Configured implements
     CrawlDatum fetchDatum = null;
     ParseData parseData = null;
     ParseText parseText = null;
+    Content content = null;
 
     while (values.hasNext()) {
       final Writable value = values.next().get(); // unwrap
@@ -217,6 +220,8 @@ public class IndexerMapReduce extends Configured implements
         }
       } else if (value instanceof ParseText) {
         parseText = (ParseText) value;
+      } else if (value instanceof Content) {
+        content = (Content) value;
       } else if (LOG.isWarnEnabled()) {
         LOG.warn("Unrecognized type: " + value.getClass());
       }
@@ -242,7 +247,7 @@ public class IndexerMapReduce extends Configured implements
     }
 
     if (fetchDatum == null || dbDatum == null || parseText == null
-        || parseData == null) {
+        || parseData == null || content == null) {
       return; // only have inlinks
     }
 
@@ -274,6 +279,9 @@ public class IndexerMapReduce extends Configured implements
 
     // add digest, used by dedup
     doc.add("digest", metadata.get(Nutch.SIGNATURE_KEY));
+
+    parseData.getParseMeta().add(Nutch.ORIGINAL_FULL_CONTENT,
+        new String(content.getContent()));
 
     final Parse parse = new ParseImpl(parseText, parseData);
     try {
@@ -350,6 +358,7 @@ public class IndexerMapReduce extends Configured implements
           CrawlDatum.PARSE_DIR_NAME));
       FileInputFormat.addInputPath(job, new Path(segment, ParseData.DIR_NAME));
       FileInputFormat.addInputPath(job, new Path(segment, ParseText.DIR_NAME));
+      FileInputFormat.addInputPath(job, new Path(segment, Fetcher.CONTENT_REDIR));
     }
 
     FileInputFormat.addInputPath(job, new Path(crawlDb, CrawlDb.CURRENT_NAME));
