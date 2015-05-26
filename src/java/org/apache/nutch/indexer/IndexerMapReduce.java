@@ -19,9 +19,8 @@ package org.apache.nutch.indexer;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Random;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -50,6 +49,8 @@ import org.apache.nutch.parse.ParseText;
 import org.apache.nutch.protocol.Content;
 import org.apache.nutch.scoring.ScoringFilterException;
 import org.apache.nutch.scoring.ScoringFilters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IndexerMapReduce extends Configured implements
     Mapper<Text, Writable, Text, NutchWritable>,
@@ -214,7 +215,8 @@ public class IndexerMapReduce extends Configured implements
               && robotsMeta.toLowerCase().indexOf("noindex") != -1) {
             // Delete it!
             output.collect(key, DELETE_ACTION);
-            reporter.incrCounter("IndexerStatus", "deleted (robots=noindex)", 1);
+            reporter
+                .incrCounter("IndexerStatus", "deleted (robots=noindex)", 1);
             return;
           }
         }
@@ -332,6 +334,11 @@ public class IndexerMapReduce extends Configured implements
     doc.setWeight(boost);
     // store boost for use by explain and dedup
     doc.add("boost", Float.toString(boost));
+    Random r = new Random();
+    doc.add("boost0", Float.toString(r.nextFloat() + 1f)); /* Zero Boosting */
+    doc.add("boost1", Float.toString(r.nextFloat() + 10f)); /* Default Boosting */
+    doc.add("boost2", Float.toString(r.nextFloat() - 1f)); /* Implicit Boosting */
+    doc.add("boost3", Float.toString(r.nextFloat())); /* Semantic Boosting */
 
     reporter.incrCounter("IndexerStatus", "indexed (add/update)", 1);
 
@@ -358,7 +365,8 @@ public class IndexerMapReduce extends Configured implements
           CrawlDatum.PARSE_DIR_NAME));
       FileInputFormat.addInputPath(job, new Path(segment, ParseData.DIR_NAME));
       FileInputFormat.addInputPath(job, new Path(segment, ParseText.DIR_NAME));
-      FileInputFormat.addInputPath(job, new Path(segment, Fetcher.CONTENT_REDIR));
+      FileInputFormat.addInputPath(job,
+          new Path(segment, Fetcher.CONTENT_REDIR));
     }
 
     FileInputFormat.addInputPath(job, new Path(crawlDb, CrawlDb.CURRENT_NAME));

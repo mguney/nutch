@@ -25,33 +25,33 @@ import org.apache.nutch.util.NutchConfiguration;
 
 public class NutchRunner {
 
-    static String crawlDB = "crawl/crawldb";
-    static String linkDbBase = "crawl/linkdb";
-    static String webgraphdb = "crawl/webgraphdb";
-    static String segmentDBbBase = "crawl/segments";
-    static String seedDB = "crawl/urls";
+    static String CRAWL_DB = "crawl/crawldb";
+    static String LINK_DB = "crawl/linkdb";
+    static String WEBGRAPH_DB = "crawl/webgraphdb";
+    static String SEGMENTS = "crawl/segments";
+    static String SEED_URL = "crawl/urls";
 
     public static void main(String[] args) throws Exception {
         //        stats();
         //        invertLinks();
         //        stats();
-        solrindex();
+      crawl();
     }
 
     private static void solrindex() throws Exception {
         Configuration conf = NutchConfiguration.create();
         // .println("Usage: Indexer <crawldb> [-linkdb <linkdb>] [-params k1=v1&k2=v2...] (<segment> ... | -dir <segments>) [-noCommit] [-deleteGone] [-filter] [-normalize]");
-        ToolRunner.run(conf, new IndexingJob(), new String[] { crawlDB, "-linkdb", linkDbBase, "-dir", segmentDBbBase, "-normalize" });
+        ToolRunner.run(conf, new IndexingJob(), new String[] { CRAWL_DB, "-linkdb", LINK_DB, "-dir", SEGMENTS, "-normalize" });
     }
 
     private static void score() throws Exception {
         Configuration conf = NutchConfiguration.create();
 
-        ToolRunner.run(conf, new Loops(), new String[] { "-webgraphdb", webgraphdb });
-        ToolRunner.run(conf, new LinkRank(), new String[] { "-webgraphdb", webgraphdb });
-        ToolRunner.run(conf, new ScoreUpdater(), new String[] { "-crawldb", crawlDB, "-webgraphdb", webgraphdb });
-        ToolRunner.run(conf, new NodeDumper(), new String[] { "-scores", "-topn", "1000", "-webgraphdb", webgraphdb, "-output",
-                webgraphdb + "/dump/scores" });
+        ToolRunner.run(conf, new Loops(), new String[] { "-webgraphdb", WEBGRAPH_DB });
+        ToolRunner.run(conf, new LinkRank(), new String[] { "-webgraphdb", WEBGRAPH_DB });
+        ToolRunner.run(conf, new ScoreUpdater(), new String[] { "-crawldb", CRAWL_DB, "-webgraphdb", WEBGRAPH_DB });
+        ToolRunner.run(conf, new NodeDumper(), new String[] { "-scores", "-topn", "1000", "-webgraphdb", WEBGRAPH_DB, "-output",
+                WEBGRAPH_DB + "/dump/scores" });
     }
 
     private static void webgraph() throws Exception {
@@ -59,7 +59,7 @@ public class NutchRunner {
 
         WebGraph webGraph = new WebGraph();
 
-        ToolRunner.run(conf, webGraph, new String[] { "-segmentDir", segmentDBbBase, "-webgraphdb", webgraphdb });
+        ToolRunner.run(conf, webGraph, new String[] { "-segmentDir", SEGMENTS, "-webgraphdb", WEBGRAPH_DB });
     }
 
     private static void stats() throws Exception {
@@ -67,7 +67,7 @@ public class NutchRunner {
 
         CrawlDbReader crawlDbReader = new CrawlDbReader();
 
-        ToolRunner.run(conf, crawlDbReader, new String[] { crawlDB, "-stats" });
+        ToolRunner.run(conf, crawlDbReader, new String[] { CRAWL_DB, "-stats" });
     }
 
     private static void invertLinks() throws Exception {
@@ -75,7 +75,7 @@ public class NutchRunner {
 
         LinkDb linkDb = new LinkDb();
 
-        ToolRunner.run(conf, linkDb, new String[] { linkDbBase, "-dir", segmentDBbBase });
+        ToolRunner.run(conf, linkDb, new String[] { LINK_DB, "-dir", SEGMENTS });
     }
 
     private static void crawl() throws Exception {
@@ -91,16 +91,16 @@ public class NutchRunner {
 
         CrawlDb updateDb = new CrawlDb();
 
-        ToolRunner.run(conf, injector, new String[] { crawlDB, seedDB });
+        ToolRunner.run(conf, injector, new String[] { CRAWL_DB, SEED_URL });
 
         for (int i = 0; i < numOfCrawl; i++) {
             System.out.println("NumOfCrawl:" + i);
 
-            ToolRunner.run(conf, generator, new String[] { crawlDB, segmentDBbBase, "-topN", "1000" });
+            ToolRunner.run(conf, generator, new String[] { CRAWL_DB, SEGMENTS, "-topN", "1000" });
 
             List<String> segments = new ArrayList<String>();
 
-            for (File file : (new File(segmentDBbBase)).listFiles()) {
+            for (File file : (new File(SEGMENTS)).listFiles()) {
                 segments.add(file.getAbsolutePath());
             }
             Collections.sort(segments, new Comparator<String>() {
@@ -116,7 +116,7 @@ public class NutchRunner {
 
             ToolRunner.run(conf, parser, new String[] { segmentDir });
 
-            ToolRunner.run(conf, updateDb, new String[] { crawlDB, segmentDir });
+            ToolRunner.run(conf, updateDb, new String[] { CRAWL_DB, segmentDir });
 
         }
     }
