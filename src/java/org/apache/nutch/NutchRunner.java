@@ -1,4 +1,4 @@
-package com.gun3y.nutch;
+package org.apache.nutch;
 
 import java.io.File;
 import java.util.ArrayList;
