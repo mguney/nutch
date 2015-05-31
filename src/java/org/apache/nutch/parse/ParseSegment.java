@@ -17,30 +17,50 @@
 
 package org.apache.nutch.parse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.nutch.crawl.CrawlDatum;
 import org.apache.nutch.crawl.SignatureFactory;
-import org.apache.nutch.segment.SegmentChecker;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapred.*;
-import org.apache.hadoop.util.*;
-import org.apache.hadoop.conf.*;
 import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.metadata.Nutch;
 import org.apache.nutch.net.protocols.Response;
-import org.apache.nutch.protocol.*;
+import org.apache.nutch.protocol.Content;
 import org.apache.nutch.scoring.ScoringFilterException;
 import org.apache.nutch.scoring.ScoringFilters;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.nutch.util.*;
-import org.apache.hadoop.fs.Path;
-
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Map.Entry;
+import org.apache.nutch.segment.SegmentChecker;
+import org.apache.nutch.util.NutchConfiguration;
+import org.apache.nutch.util.NutchJob;
+import org.apache.nutch.util.NutchTool;
+import org.apache.nutch.util.StringUtil;
+import org.apache.nutch.util.TimingUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /* Parse content in a segment. */
 public class ParseSegment extends NutchTool implements Tool,
@@ -200,11 +220,11 @@ public class ParseSegment extends NutchTool implements Tool,
   }
 
   public void parse(Path segment) throws IOException {
-     if (SegmentChecker.isParsed(segment, FileSystem.get(getConf()))) {
-	  LOG.warn("Segment: " + segment
-	  + " already parsed!! Skipped parsing this segment!!"); // NUTCH-1854
-          return;
-      }
+    if (SegmentChecker.isParsed(segment, FileSystem.get(getConf()))) {
+      LOG.warn("Segment: " + segment
+          + " already parsed!! Skipped parsing this segment!!"); // NUTCH-1854
+      return;
+    }
 
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     long start = System.currentTimeMillis();
@@ -269,7 +289,8 @@ public class ParseSegment extends NutchTool implements Tool,
   /*
    * Used for Nutch REST service
    */
-  public Map<String, Object> run(Map<String, String> args, String crawlId) throws Exception {
+  public Map<String, Object> run(Map<String, String> args, String crawlId)
+      throws Exception {
 
     Map<String, Object> results = new HashMap<String, Object>();
     String RESULT = "result";
@@ -280,19 +301,19 @@ public class ParseSegment extends NutchTool implements Tool,
       getConf().setBoolean("parse.normalize.urls", false);
     }
 
-    String segment_dir = crawlId+"/segments";
+    String segment_dir = crawlId + "/segments";
     File segmentsDir = new File(segment_dir);
-    File[] segmentsList = segmentsDir.listFiles();  
-    Arrays.sort(segmentsList, new Comparator<File>(){
+    File[] segmentsList = segmentsDir.listFiles();
+    Arrays.sort(segmentsList, new Comparator<File>() {
       @Override
       public int compare(File f1, File f2) {
-        if(f1.lastModified()>f2.lastModified())
+        if (f1.lastModified() > f2.lastModified())
           return -1;
         else
           return 0;
-      }      
+      }
     });
-    
+
     Path segment = new Path(segmentsList[0].getPath());
     parse(segment);
     results.put(RESULT, Integer.toString(0));

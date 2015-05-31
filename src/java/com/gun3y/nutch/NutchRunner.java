@@ -25,100 +25,127 @@ import org.apache.nutch.util.NutchConfiguration;
 
 public class NutchRunner {
 
-    static String CRAWL_DB = "crawl/crawldb";
-    static String LINK_DB = "crawl/linkdb";
-    static String WEBGRAPH_DB = "crawl/webgraphdb";
-    static String SEGMENTS = "crawl/segments";
-    static String SEED_URL = "crawl/urls";
+  static String CRAWL = "crawl";
+  static String CRAWL_DB = "crawl/crawldb";
+  static String LINK_DB = "crawl/linkdb";
+  static String WEBGRAPH_DB = "crawl/webgraphdb";
+  static String SEGMENTS = "crawl/segments";
+  static String SEED_URL = "crawl/urls";
 
-    public static void main(String[] args) throws Exception {
-        //        stats();
-        //        invertLinks();
-        //        stats();
-      crawl();
-    }
+  public static void main(String[] args) throws Exception {
+    // stats();
+    // invertLinks();
+    // stats();
+    // crawl2();
+    indexer();
+  }
 
-    private static void solrindex() throws Exception {
-        Configuration conf = NutchConfiguration.create();
-        // .println("Usage: Indexer <crawldb> [-linkdb <linkdb>] [-params k1=v1&k2=v2...] (<segment> ... | -dir <segments>) [-noCommit] [-deleteGone] [-filter] [-normalize]");
-        ToolRunner.run(conf, new IndexingJob(), new String[] { CRAWL_DB, "-linkdb", LINK_DB, "-dir", SEGMENTS, "-normalize" });
-    }
+  private static void indexer() throws Exception {
+    Configuration conf = NutchConfiguration.create();
+    ToolRunner.run(conf, new Indexer(), new String[] { "-dir",
+        "/home/keysersoze/nutch/crawl" });
+  }
 
-    private static void score() throws Exception {
-        Configuration conf = NutchConfiguration.create();
+  private static void solrindex() throws Exception {
+    Configuration conf = NutchConfiguration.create();
+    // .println("Usage: Indexer <crawldb> [-linkdb <linkdb>] [-params k1=v1&k2=v2...] (<segment> ... | -dir <segments>) [-noCommit] [-deleteGone] [-filter] [-normalize]");
+    ToolRunner.run(conf, new IndexingJob(), new String[] { CRAWL_DB, "-linkdb",
+        LINK_DB, "-dir", SEGMENTS, "-normalize" });
+  }
 
-        ToolRunner.run(conf, new Loops(), new String[] { "-webgraphdb", WEBGRAPH_DB });
-        ToolRunner.run(conf, new LinkRank(), new String[] { "-webgraphdb", WEBGRAPH_DB });
-        ToolRunner.run(conf, new ScoreUpdater(), new String[] { "-crawldb", CRAWL_DB, "-webgraphdb", WEBGRAPH_DB });
-        ToolRunner.run(conf, new NodeDumper(), new String[] { "-scores", "-topn", "1000", "-webgraphdb", WEBGRAPH_DB, "-output",
-                WEBGRAPH_DB + "/dump/scores" });
-    }
+  private static void score() throws Exception {
+    Configuration conf = NutchConfiguration.create();
 
-    private static void webgraph() throws Exception {
-        Configuration conf = NutchConfiguration.create();
+    ToolRunner.run(conf, new Loops(),
+        new String[] { "-webgraphdb", WEBGRAPH_DB });
+    ToolRunner.run(conf, new LinkRank(), new String[] { "-webgraphdb",
+        WEBGRAPH_DB });
+    ToolRunner.run(conf, new ScoreUpdater(), new String[] { "-crawldb",
+        CRAWL_DB, "-webgraphdb", WEBGRAPH_DB });
+    ToolRunner.run(conf, new NodeDumper(), new String[] { "-scores", "-topn",
+        "1000", "-webgraphdb", WEBGRAPH_DB, "-output",
+        WEBGRAPH_DB + "/dump/scores" });
+  }
 
-        WebGraph webGraph = new WebGraph();
+  private static void webgraph() throws Exception {
+    Configuration conf = NutchConfiguration.create();
 
-        ToolRunner.run(conf, webGraph, new String[] { "-segmentDir", SEGMENTS, "-webgraphdb", WEBGRAPH_DB });
-    }
+    WebGraph webGraph = new WebGraph();
 
-    private static void stats() throws Exception {
-        Configuration conf = NutchConfiguration.create();
+    ToolRunner.run(conf, webGraph, new String[] { "-segmentDir", SEGMENTS,
+        "-webgraphdb", WEBGRAPH_DB });
+  }
 
-        CrawlDbReader crawlDbReader = new CrawlDbReader();
+  private static void stats() throws Exception {
+    Configuration conf = NutchConfiguration.create();
 
-        ToolRunner.run(conf, crawlDbReader, new String[] { CRAWL_DB, "-stats" });
-    }
+    CrawlDbReader crawlDbReader = new CrawlDbReader();
 
-    private static void invertLinks() throws Exception {
-        Configuration conf = NutchConfiguration.create();
+    ToolRunner.run(conf, crawlDbReader, new String[] { CRAWL_DB, "-stats" });
+  }
 
-        LinkDb linkDb = new LinkDb();
+  private static void invertLinks() throws Exception {
+    Configuration conf = NutchConfiguration.create();
 
-        ToolRunner.run(conf, linkDb, new String[] { LINK_DB, "-dir", SEGMENTS });
-    }
+    LinkDb linkDb = new LinkDb();
 
-    private static void crawl() throws Exception {
+    ToolRunner.run(conf, linkDb, new String[] { LINK_DB, "-dir", SEGMENTS });
+  }
 
-        Configuration conf = NutchConfiguration.create();
+  private static void crawl2() throws Exception {
 
-        int numOfCrawl = 10;
+    Configuration conf = NutchConfiguration.create();
 
-        Injector injector = new Injector();
-        Generator generator = new Generator();
-        Fetcher fetcher = new Fetcher();
-        ParseSegment parser = new ParseSegment();
+    Crawler crawl = new Crawler();
+    // Crawl <urlDir> -solr <solrURL> [-dir d] [-threads n] [-depth i]
+    // [-topN N]
+    ToolRunner.run(conf, crawl, new String[] { SEED_URL, "-dir", CRAWL + 2,
+        "-threads", "5", "-depth", "2", "-topN", "10" });
 
-        CrawlDb updateDb = new CrawlDb();
+  }
 
-        ToolRunner.run(conf, injector, new String[] { CRAWL_DB, SEED_URL });
+  private static void crawl() throws Exception {
 
-        for (int i = 0; i < numOfCrawl; i++) {
-            System.out.println("NumOfCrawl:" + i);
+    Configuration conf = NutchConfiguration.create();
 
-            ToolRunner.run(conf, generator, new String[] { CRAWL_DB, SEGMENTS, "-topN", "1000" });
+    int numOfCrawl = 10;
 
-            List<String> segments = new ArrayList<String>();
+    Injector injector = new Injector();
+    Generator generator = new Generator();
+    Fetcher fetcher = new Fetcher();
+    ParseSegment parser = new ParseSegment();
 
-            for (File file : (new File(SEGMENTS)).listFiles()) {
-                segments.add(file.getAbsolutePath());
-            }
-            Collections.sort(segments, new Comparator<String>() {
-                @Override
-                public int compare(String o1, String o2) {
-                    return o2.compareTo(o1);
-                }
-            });
+    CrawlDb updateDb = new CrawlDb();
 
-            String segmentDir = segments.get(0);
+    ToolRunner.run(conf, injector, new String[] { CRAWL_DB, SEED_URL });
 
-            ToolRunner.run(conf, fetcher, new String[] { segmentDir });
+    for (int i = 0; i < numOfCrawl; i++) {
+      System.out.println("NumOfCrawl:" + i);
 
-            ToolRunner.run(conf, parser, new String[] { segmentDir });
+      ToolRunner.run(conf, generator, new String[] { CRAWL_DB, SEGMENTS,
+          "-topN", "1000" });
 
-            ToolRunner.run(conf, updateDb, new String[] { CRAWL_DB, segmentDir });
+      List<String> segments = new ArrayList<String>();
 
+      for (File file : (new File(SEGMENTS)).listFiles()) {
+        segments.add(file.getAbsolutePath());
+      }
+      Collections.sort(segments, new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+          return o2.compareTo(o1);
         }
+      });
+
+      String segmentDir = segments.get(0);
+
+      ToolRunner.run(conf, fetcher, new String[] { segmentDir });
+
+      ToolRunner.run(conf, parser, new String[] { segmentDir });
+
+      ToolRunner.run(conf, updateDb, new String[] { CRAWL_DB, segmentDir });
+
     }
+  }
 
 }

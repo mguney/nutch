@@ -5,8 +5,8 @@ conf/slaves
 build/
 runtime/
 logs/
-crawl/
+data/
 .project
 .classpath
 .settings
-crawl_old/
+*.log
