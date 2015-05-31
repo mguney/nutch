@@ -1,4 +1,4 @@
-package org.apache.nutch;
+package org.apache.nutch.crawl;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -10,11 +10,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.nutch.crawl.CrawlDb;
-import org.apache.nutch.crawl.CrawlDbReader;
-import org.apache.nutch.crawl.Generator;
-import org.apache.nutch.crawl.Injector;
-import org.apache.nutch.crawl.LinkDb;
 import org.apache.nutch.fetcher.Fetcher;
 import org.apache.nutch.parse.ParseSegment;
 import org.apache.nutch.util.NutchConfiguration;

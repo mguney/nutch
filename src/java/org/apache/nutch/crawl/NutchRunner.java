@@ -1,4 +1,4 @@
-package org.apache.nutch;
+package org.apache.nutch.crawl;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -8,11 +8,6 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.nutch.crawl.CrawlDb;
-import org.apache.nutch.crawl.CrawlDbReader;
-import org.apache.nutch.crawl.Generator;
-import org.apache.nutch.crawl.Injector;
-import org.apache.nutch.crawl.LinkDb;
 import org.apache.nutch.fetcher.Fetcher;
 import org.apache.nutch.indexer.IndexingJob;
 import org.apache.nutch.parse.ParseSegment;

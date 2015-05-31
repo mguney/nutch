@@ -1,9 +1,8 @@
-package org.apache.nutch;
+package org.apache.nutch.crawl;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -11,7 +10,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.nutch.crawl.LinkDb;
 import org.apache.nutch.indexer.IndexingJob;
 import org.apache.nutch.scoring.webgraph.LinkRank;
 import org.apache.nutch.scoring.webgraph.Loops;
@@ -71,7 +69,7 @@ public class Indexer extends Configured implements Tool {
     Path segments = new Path(crawlDir + "/segments");
     Path webgraphdb = new Path(crawlDir + "/webgraphdb");
 
-    if (StringUtils.isBlank(solrUrl)) {
+    if (solrUrl == null) {
       LOG.warn("solrUrl is not set, indexing will be skipped...");
     } else {
       getConf().set("solr.server.url", solrUrl);
@@ -107,7 +105,7 @@ public class Indexer extends Configured implements Tool {
       scoreUpdater.close();
     }
 
-    if (StringUtils.isNotBlank(solrUrl)) {
+    if (solrUrl != null) {
       IndexingJob indexingJob = new IndexingJob(getConf());
       indexingJob.index(crawlDb, linkDb, Arrays.asList(segPaths), false);
     }
